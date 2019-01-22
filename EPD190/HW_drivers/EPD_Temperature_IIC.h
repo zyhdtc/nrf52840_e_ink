@@ -14,7 +14,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "driverlib.h"
+//#include "driverlib.h"
 #include "Board_HW_Driver.h"
 #ifndef EPD_Temperature_IIC_H_
 #define EPD_Temperature_IIC_H_

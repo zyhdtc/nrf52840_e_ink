@@ -144,10 +144,7 @@ uint32_t get_EPD_time_tick(void)
  */
 void EPD_delay_ms(unsigned int ms)
 {
-	while(ms--)
-	{
-		_delay_ms(1);
-	}
+	nrf_delay_ms(ms);
 }
 
 void delay_btwn_CS_H_L(void)

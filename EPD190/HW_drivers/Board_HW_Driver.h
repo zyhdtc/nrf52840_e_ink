@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <hal/nrf_gpio.h>
+
 #ifndef BOARD_HW_DRIVER_H_
 #define BOARD_HW_DRIVER_H_
 
@@ -43,8 +44,8 @@ typedef struct Em_register_array
 *****************************************************************************/
 #define Temper_PORT             				GPIO_PORT_P6       /**< LaunchPad P6.6 */
 #define Temper_PIN              				GPIO_PIN6
-#define SPICLK_PORT             				GPIO_PORT_P3       /**< LaunchPad P3.2 */
-#define SPICLK_PIN              				GPIO_PIN2
+#define SPICLK_PORT             				0       /**< LaunchPad P0.3 */
+#define SPICLK_PIN              				3
 #define EPD_BUSY_PORT           				GPIO_PORT_P2       /**< LaunchPad P2.7  */
 #define EPD_BUSY_PIN            				GPIO_PIN7
 #define PWM_PORT                				GPIO_PORT_P4       /**< LaunchPad P4.2  */
@@ -57,14 +58,14 @@ typedef struct Em_register_array
 #define EPD_DISCHARGE_PIN       				GPIO_PIN3
 #define EPD_BORDER_PORT         				GPIO_PORT_P2       /**< LaunchPad P2.6  */
 #define EPD_BORDER_PIN          				GPIO_PIN6
-#define SPIMISO_PORT            				GPIO_PORT_P3       /**< LaunchPad P3.1  */
-#define SPIMISO_PIN             				GPIO_PIN1
-#define SPIMOSI_PORT            				GPIO_PORT_P3       /**< LaunchPad P3.0  */
-#define SPIMOSI_PIN             				GPIO_PIN0
+#define SPIMISO_PORT            				0       /**< LaunchPad P3.1  */
+#define SPIMISO_PIN             				28
+#define SPIMOSI_PORT            				0       /**< LaunchPad P3.0  */
+#define SPIMOSI_PIN             				4
 #define Flash_CS_PORT           				GPIO_PORT_P2       /**< LaunchPad P2.2  */
 #define Flash_CS_PIN            				GPIO_PIN2
-#define EPD_CS_PORT             				GPIO_PORT_P2       /**< LaunchPad P2.0  */
-#define EPD_CS_PIN              				GPIO_PIN0
+#define EPD_CS_PORT             				0       /**< LaunchPad P2.0  */
+#define EPD_CS_PIN              				29
 
 #define EPD_DC_PORT             				GPIO_PORT_P4       /**< LaunchPad P4.2  */
 #define EPD_DC_PIN              				GPIO_PIN2

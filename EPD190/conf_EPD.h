@@ -45,6 +45,5 @@
 #include "EPD_drivers.h"
 #include "EPD_interface.h"
 
-
 #endif /* CONF_EPD_H_INCLUDED */
 
