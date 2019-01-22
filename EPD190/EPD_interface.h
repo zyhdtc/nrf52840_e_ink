@@ -14,8 +14,9 @@
 
 #ifndef EPD_INTERFACE_H_
 #define EPD_INTERFACE_H_
-
-
+#include <stdbool.h>
+#include <stdint.h>
+#include "EPD_drivers.h"
 
 #define USE_Temperature_Sensor				-100
 int8_t Set_AssignEPD_Drive(Driver_Type_t EPD_Driver,EPD_SIZE_t EPD_size,int8_t Seltemperature);

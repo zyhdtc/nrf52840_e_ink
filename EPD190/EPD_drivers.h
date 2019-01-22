@@ -19,6 +19,11 @@
 #ifndef COG_FPL_CONFIGURE_H_
 #define COG_FPL_CONFIGURE_H_
 
+
+#if defined ( __CC_ARM   )
+#pragma anon_unions
+#endif
+
 #define ArrayLength(array) (sizeof(array)/sizeof(array[0]))
 
 typedef void (*EPD_read_memory_handler)(long flash_address,uint8_t *target_buffer,
