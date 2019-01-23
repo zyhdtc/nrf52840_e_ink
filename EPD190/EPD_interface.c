@@ -20,6 +20,7 @@
 #include "EPD_Temperature_IIC.h"
 #include "EPD_drivers.h"
 #include "COG_Drivers_List.h"
+//#include "Board_HW_Driver.h"
 static volatile EPD_SIZE_t use_epd_size;
 static Driver_Handle_t *EPD_Driver_Handle;
 static int8_t temperature;

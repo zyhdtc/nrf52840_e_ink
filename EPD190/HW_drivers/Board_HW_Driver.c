@@ -14,43 +14,49 @@
 
 #include "Board_HW_Driver.h"
 #include <HW_drivers/UART_Driver.h>
-static  volatile uint32_t sys_Counter,EPD_Counter;
+#include <stdbool.h>
+#include <stdint.h>
+#include "nrf.h"
+#include "nrf_drv_timer.h"
+#include "bsp.h"
+#include "app_error.h"
+static  volatile uint32_t EPD_Counter;
+const nrf_drv_timer_t TIMER_EPD = NRF_DRV_TIMER_INSTANCE(0);
+
+
+/**
+ * @brief Handler for timer events.
+ */
+void timer_epd_event_handler(nrf_timer_event_t event_type, void* p_context)
+{
+    EPD_Counter++;
+}
+
+
 
 uint32_t getnowtime(void)
 {
-	return sys_Counter;
+	return 0;
 }
 
 void Systick_Configuration(void)
 {
-	systick_Start();
-	sys_Counter =0;
+		uint32_t time_ms = 1; // time in ms to be compared with
+		uint32_t err_code = NRF_SUCCESS;
+		uint32_t time_ticks;
+		//Configure TIMER_EPD
+		nrf_drv_timer_config_t timer_cfg = NRF_DRV_TIMER_DEFAULT_CONFIG;
+    err_code = nrf_drv_timer_init(&TIMER_EPD, &timer_cfg, timer_epd_event_handler);
+    APP_ERROR_CHECK(err_code);
+	
+		time_ticks = nrf_drv_timer_ms_to_ticks(&TIMER_EPD, time_ms);
 
+    nrf_drv_timer_extended_compare(&TIMER_EPD, NRF_TIMER_CC_CHANNEL0, time_ticks, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true);
 }
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=TIMERB1_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(TIMERB1_VECTOR)))
-#endif
-void TIMER1_B0_ISR(void)
-{
-	//Any access, read or write, of the TAIV register automatically resets the
-	//highest "pending" interrupt flag
-	switch(__even_in_range(TBIV,14))
-	{
-		case 14:
-			sys_Counter++;
-			break;
-		default:
-			break;
-	}
-}
+
 void systick_Stop(void)
 {
-	Timer_B_stop(TIMER_B0_BASE);
-	Timer_B_disableInterrupt(TIMER_B0_BASE);
-	Timer_B_clearTimerInterrupt(TIMER_B0_BASE);
+
 }
 /**
  * \brief Start Timer
@@ -59,21 +65,7 @@ void systick_Stop(void)
  */
 void systick_Start(void)
 {
-#define TIMER_B_PERIOD 				(uint16_t)((CPU_F/100)+40)
-	//Start timer
-	Timer_B_initUpModeParam initUpParam = {0};
-	initUpParam.clockSource = TIMER_B_CLOCKSOURCE_ACLK;
-	initUpParam.clockSourceDivider = TIMER_B_CLOCKSOURCE_DIVIDER_1;
-	initUpParam.timerPeriod = 32;//ACLK=32768 HZ,
-	initUpParam.timerInterruptEnable_TBIE = TIMER_B_TBIE_INTERRUPT_ENABLE;
-	initUpParam.captureCompareInterruptEnable_CCR0_CCIE = TIMER_B_CCIE_CCR0_INTERRUPT_DISABLE;
-	initUpParam.timerClear = TIMER_B_DO_CLEAR;
-	initUpParam.startTimer = true;
-	Timer_B_initUpMode(TIMER_B0_BASE, &initUpParam);
 
-	Timer_B_startCounter(TIMER_B0_BASE,
-	                     TIMER_B_UP_MODE
-	                    );
 }
 /**
  * \brief Start Timer
@@ -83,51 +75,19 @@ void systick_Start(void)
  */
 void start_EPD_timer(void)
 {
-#define TIMER_A_PERIOD 				((CPU_F/1000)+40)
-	//Start timer
-	Timer_A_initUpModeParam initUpParam = {0};
-	initUpParam.clockSource = TIMER_A_CLOCKSOURCE_SMCLK;
-	initUpParam.clockSourceDivider = TIMER_A_CLOCKSOURCE_DIVIDER_1;
-	initUpParam.timerPeriod = TIMER_A_PERIOD;
-	initUpParam.timerInterruptEnable_TAIE = TIMER_A_TAIE_INTERRUPT_ENABLE;
-	initUpParam.captureCompareInterruptEnable_CCR0_CCIE = TIMER_A_CCIE_CCR0_INTERRUPT_DISABLE;
-	initUpParam.timerClear = TIMER_A_DO_CLEAR;
-	initUpParam.startTimer = true;
-	Timer_A_initUpMode(TIMER_A1_BASE, &initUpParam);
 
-	Timer_A_startCounter(TIMER_A1_BASE,
-	                     TIMER_A_UP_MODE
-	                    );
+	//Start timer
+	nrf_drv_timer_enable(&TIMER_EPD);
 	EPD_Counter=0;
 }
-#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
-#pragma vector=TIMER1_A1_VECTOR
-__interrupt
-#elif defined(__GNUC__)
-__attribute__((interrupt(TIMER1_A1_VECTOR)))
-#endif
-void TIMER1_A1_ISR(void)
-{
-	//Any access, read or write, of the TAIV register automatically resets the
-	//highest "pending" interrupt flag
-	switch(__even_in_range(TA1IV,14))
-	{
-		case 14:
-			EPD_Counter++;
-			break;
-		default:
-			break;
-	}
-}
+
 
 /**
  * \brief Stop Timer
  */
 void stop_EPD_timer(void)
 {
-	Timer_A_stop(TIMER_A1_BASE);
-	Timer_A_disableInterrupt(TIMER_A1_BASE);
-	Timer_A_clearTimerInterrupt(TIMER_A1_BASE);
+	nrf_drv_timer_disable(&TIMER_EPD);
 }
 /**
  * \brief Get current Timer after starting a new one
@@ -144,7 +104,11 @@ uint32_t get_EPD_time_tick(void)
  */
 void EPD_delay_ms(unsigned int ms)
 {
-	nrf_delay_ms(ms);
+	start_EPD_timer();
+	while(get_EPD_time_tick()<=ms)
+	{
+
+	}
 }
 
 void delay_btwn_CS_H_L(void)
@@ -156,53 +120,54 @@ void delay_btwn_CS_H_L(void)
 void system_init(void)
 {
 
-	//Stop WDT
-	WDT_A_hold(WDT_A_BASE);
-	PMM_setVCoreUp(PMM_CORE_LEVEL_1);
-	PMM_setVCoreUp(PMM_CORE_LEVEL_2);
-	PMM_setVCoreUp(PMM_CORE_LEVEL_3);
+//	//Stop WDT
+//	WDT_A_hold(WDT_A_BASE);
+//	PMM_setVCoreUp(PMM_CORE_LEVEL_1);
+//	PMM_setVCoreUp(PMM_CORE_LEVEL_2);
+//	PMM_setVCoreUp(PMM_CORE_LEVEL_3);
 
-	UCS_initClockSignal(
-	    UCS_FLLREF,
-	    UCS_REFOCLK_SELECT,
-	    UCS_CLOCK_DIVIDER_1
-	);
-	UCS_initClockSignal(
-	    UCS_ACLK,
-	    UCS_REFOCLK_SELECT,
-	    UCS_CLOCK_DIVIDER_1
-	);
+//	UCS_initClockSignal(
+//	    UCS_FLLREF,
+//	    UCS_REFOCLK_SELECT,
+//	    UCS_CLOCK_DIVIDER_1
+//	);
+//	UCS_initClockSignal(
+//	    UCS_ACLK,
+//	    UCS_REFOCLK_SELECT,
+//	    UCS_CLOCK_DIVIDER_1
+//	);
 
-	UCS_initFLLSettle(
-	    25000,
-	    762
-	);
+//	UCS_initFLLSettle(
+//	    25000,
+//	    762
+//	);
 
-	__bis_SR_register( GIE);
-	//Verify if the Clock settings are as expected
+//	__bis_SR_register( GIE);
+//	//Verify if the Clock settings are as expected
 
-	/*
-		clockValue = UCS_getMCLK();//24969216
-		clockValue = UCS_getACLK();//32768
-		clockValue = UCS_getSMCLK();//24969216
-	*/
+//	/*
+//		clockValue = UCS_getMCLK();//24969216
+//		clockValue = UCS_getACLK();//32768
+//		clockValue = UCS_getSMCLK();//24969216
+//	*/
 }
 /**
  * \brief PWM toggling.
  *
  * \param ms The interval of PWM toggling (mini seconds)
  */
+#include "nrf_delay.h"
 void PWM_run(uint16_t ms)
 {
 
 	start_EPD_timer();
 	do
 	{
-		//~156K Hz
+		//~156K Hz    not accurate
 		EPD_pwm_high();
-		__delay_cycles(10);
+		nrf_delay_us(6);
 		EPD_pwm_low();
-		__delay_cycles(10);
+		nrf_delay_us(6);
 	}
 	while (get_EPD_time_tick() < ms);   //wait Delay Time
 
@@ -212,33 +177,47 @@ void PWM_run(uint16_t ms)
 //******************************************************************
 //* SPI  Configuration
 //******************************************************************
+
+#include "nrf_drv_spi.h"
+#include "sdk_config.h"
 bool spi_state=false;
+#define SPI_INSTANCE  0 /**< SPI instance index. */
+static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
 /**
  * \brief Configure SPI
  */
 void epd_spi_init(uint32_t spi_baudrate)
 {
-	USCI_B_SPI_disable(USCI_B0_BASE);
-	//config  i/o
-	config_gpio_dir_o(SPICLK_PORT, SPICLK_PIN);
-	config_gpio_dir_o(SPIMOSI_PORT, SPIMOSI_PIN);
-	config_gpio_dir_i(SPIMISO_PORT, SPIMISO_PIN);
-	//P3.0,1,2 option select
-	GPIO_setAsPeripheralModuleFunctionInputPin(
-	    GPIO_PORT_P3,
-	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
-	);
-	//Initialize Master
-	USCI_B_SPI_initMasterParam param = {0};
-	param.selectClockSource = USCI_B_SPI_CLOCKSOURCE_SMCLK;
-	param.clockSourceFrequency = UCS_getSMCLK();
-	param.desiredSpiClock = spi_baudrate;
-	param.msbFirst = USCI_B_SPI_MSB_FIRST;
-	param.clockPhase = USCI_B_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
-	param.clockPolarity = USCI_B_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
-	spi_state=USCI_B_SPI_initMaster(USCI_B0_BASE, &param);
-	//Enable SPI module
-	if(spi_state)USCI_B_SPI_enable(USCI_B0_BASE);
+//	USCI_B_SPI_disable(USCI_B0_BASE);
+//	//config  i/o
+//	config_gpio_dir_o(SPICLK_PORT, SPICLK_PIN);
+//	config_gpio_dir_o(SPIMOSI_PORT, SPIMOSI_PIN);
+//	config_gpio_dir_i(SPIMISO_PORT, SPIMISO_PIN);
+//	//P3.0,1,2 option select
+//	GPIO_setAsPeripheralModuleFunctionInputPin(
+//	    GPIO_PORT_P3,
+//	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
+//	);
+//	//Initialize Master
+//	USCI_B_SPI_initMasterParam param = {0};
+//	param.selectClockSource = USCI_B_SPI_CLOCKSOURCE_SMCLK;
+//	param.clockSourceFrequency = UCS_getSMCLK();
+//	param.desiredSpiClock = spi_baudrate;
+//	param.msbFirst = USCI_B_SPI_MSB_FIRST;
+//	param.clockPhase = USCI_B_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
+//	param.clockPolarity = USCI_B_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
+//	spi_state=USCI_B_SPI_initMaster(USCI_B0_BASE, &param);
+//	//Enable SPI module
+//	if(spi_state)USCI_B_SPI_enable(USCI_B0_BASE);
+
+		nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
+    spi_config.ss_pin   = SPI_SS_PIN;
+    spi_config.miso_pin = SPI_MISO_PIN;
+    spi_config.mosi_pin = SPI_MOSI_PIN;
+    spi_config.sck_pin  = SPI_SCK_PIN;
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
+
+
 }
 /**
  * \brief Initialize SPI
