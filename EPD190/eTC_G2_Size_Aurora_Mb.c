@@ -127,7 +127,7 @@ void eTC_G2Mb_IO_Config(void)
 	EPD_discharge_low();
 }
 
-//According to EPD size and temperature to get stage_time
+//According to EPD size and temperature to get stage_time in ms
 static void eTC_G2Mb_temperature_factor(int8_t temperature) {
 	if (temperature <= -10) {
 		stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][0];
@@ -145,7 +145,7 @@ static void eTC_G2Mb_temperature_factor(int8_t temperature) {
 		stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][6];
 	} else stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][7];
 		
-	stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][5];
+	//stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][5];
 }
 
 

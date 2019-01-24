@@ -20,6 +20,7 @@
 #include "nrf_drv_timer.h"
 #include "bsp.h"
 #include "app_error.h"
+#include "nrf_delay.h"
 static  volatile uint32_t EPD_Counter;
 const nrf_drv_timer_t TIMER_EPD = NRF_DRV_TIMER_INSTANCE(0);
 
@@ -28,11 +29,21 @@ const nrf_drv_timer_t TIMER_EPD = NRF_DRV_TIMER_INSTANCE(0);
  * @brief Handler for timer events.
  */
 void timer_epd_event_handler(nrf_timer_event_t event_type, void* p_context)
-{
-    EPD_Counter++;
+{  
+	    switch (event_type)
+    {
+        case NRF_TIMER_EVENT_COMPARE0:
+            EPD_Counter++;
+            break;
+				default:
+            //Do nothing.
+            break;
+    }
 }
 
-
+/**
+ * @brief Configure Timer 0.
+ */
 void Systick_Configuration(void)
 {
 		uint32_t time_ms = 1; // time in ms to be compared with
@@ -83,11 +94,13 @@ uint32_t get_EPD_time_tick(void)
  */
  void EPD_delay_ms(unsigned int ms)
 {
-	start_EPD_timer();
-	while(get_EPD_time_tick()<=ms)
-	{
+//	start_EPD_timer();
+//	while(get_EPD_time_tick()<=ms)
+//	{
 
-	}
+//	}
+//	stop_EPD_timer();
+	nrf_delay_ms(ms);
 }
 
 void delay_btwn_CS_H_L(void)
@@ -106,7 +119,6 @@ void system_init(void)
  *
  * \param ms The interval of PWM toggling (mini seconds)
  */
-#include "nrf_delay.h"
 void PWM_run(uint16_t ms)
 {
 
@@ -133,36 +145,12 @@ void PWM_run(uint16_t ms)
 bool spi_state=false;
 #define SPI_INSTANCE  0 /**< SPI instance index. */
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
-//nrf_drv_spi_t const * const p_instance = &spi;
 
 /**
  * \brief Configure SPI
  */
 void epd_spi_init(nrf_drv_spi_frequency_t spi_baudrate)
 {
-//	USCI_B_SPI_disable(USCI_B0_BASE);
-//	//config  i/o
-//	config_gpio_dir_o(SPICLK_PORT, SPICLK_PIN);
-//	config_gpio_dir_o(SPIMOSI_PORT, SPIMOSI_PIN);
-//	config_gpio_dir_i(SPIMISO_PORT, SPIMISO_PIN);
-//	//P3.0,1,2 option select
-//	GPIO_setAsPeripheralModuleFunctionInputPin(
-//	    GPIO_PORT_P3,
-//	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
-//	);
-//	//Initialize Master
-//	USCI_B_SPI_initMasterParam param = {0};
-//	param.selectClockSource = USCI_B_SPI_CLOCKSOURCE_SMCLK;
-//	param.clockSourceFrequency = UCS_getSMCLK();
-//	param.desiredSpiClock = spi_baudrate;
-//	param.msbFirst = USCI_B_SPI_MSB_FIRST;
-//	param.clockPhase = USCI_B_SPI_PHASE_DATA_CHANGED_ONFIRST_CAPTURED_ON_NEXT;
-//	param.clockPolarity = USCI_B_SPI_CLOCKPOLARITY_INACTIVITY_HIGH;
-//	spi_state=USCI_B_SPI_initMaster(USCI_B0_BASE, &param);
-//	//Enable SPI module
-//	if(spi_state)USCI_B_SPI_enable(USCI_B0_BASE);
-
-
 		nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
     spi_config.ss_pin    = SPI_SS_PIN;
     spi_config.miso_pin  = SPI_MISO_PIN;
@@ -187,10 +175,7 @@ void EPD_spi_attach()
 void EPD_spi_detach(void)
 {
 //	USCI_B_SPI_disable(USCI_B0_BASE);
-//	GPIO_setAsOutputPin(
-//	    GPIO_PORT_P3,
-//	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
-//	);
+
 	nrf_drv_spi_uninit(&spi);
 	config_gpio_dir_o(SPICLK_PORT,SPICLK_PIN);
 	config_gpio_dir_o(SPIMISO_PORT,SPIMISO_PIN);
@@ -210,16 +195,12 @@ bool check_flash_spi(void)
  */
 uint8_t EPD_spi_read(unsigned char data)
 {
-	
-	//NRF_SPI0 = ((NRF_SPI_Type*)  NRF_SPI0_BASE)
 	nrf_spi_txd_set(NRF_SPI0, data);
 	//wait utill spi finish transfer
-	//hard-coded the delay time
-	//while(!NRF_SPI0->EVENTS_READY);
-	nrf_delay_us(10);
-	volatile uint8_t rx_data = nrf_spi_rxd_get(NRF_SPI0);
-	nrf_delay_us(10);
-	//while(!NRF_SPI0->EVENTS_READY);
+	while(!nrf_spi_event_check(NRF_SPI0,NRF_SPI_EVENT_READY ));
+	//clear the event manually 
+	nrf_spi_event_clear(NRF_SPI0,NRF_SPI_EVENT_READY);
+	uint8_t rx_data = nrf_spi_rxd_get(NRF_SPI0);
 	return rx_data;
 }
 

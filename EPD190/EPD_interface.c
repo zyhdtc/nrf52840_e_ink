@@ -23,7 +23,7 @@
 //#include "Board_HW_Driver.h"
 static volatile EPD_SIZE_t use_epd_size;
 static Driver_Handle_t *EPD_Driver_Handle;
-static int8_t temperature = 40;
+static int8_t temperature = 60;
 static bool PWD_State;
 static OperationMode_t Cur_Mode;
 void EPD_display_init(void)
