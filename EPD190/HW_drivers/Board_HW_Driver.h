@@ -54,7 +54,7 @@ typedef struct Em_register_array
 #define Temper_PORT             				0       /**< LaunchPad P6.6 */
 #define Temper_PIN              				2
 #define EPD_BUSY_PORT           				0       /**< LaunchPad P2.7  */
-#define EPD_BUSY_PIN            				18
+#define EPD_BUSY_PIN            				31
 #define PWM_PORT                				0       /**< LaunchPad P4.2  */
 #define PWM_PIN                 				26
 #define EPD_RST_PORT            				0       /**< LaunchPad P4.1 */
@@ -66,8 +66,8 @@ typedef struct Em_register_array
 #define EPD_BORDER_PORT         				1       /**< LaunchPad P2.6  */
 #define EPD_BORDER_PIN          				13
 
-#define Flash_CS_PORT           				1       /**< LaunchPad P2.2  */
-#define Flash_CS_PIN            				12
+#define Flash_CS_PORT           				0       /**< LaunchPad P2.2  */
+#define Flash_CS_PIN            				30
 
 #define EPD_DC_PORT             				1       /**< LaunchPad P4.2  */
 #define EPD_DC_PIN              				11
@@ -135,26 +135,8 @@ typedef struct Em_register_array
 		
 
 
-
-
-#define CPU_F 									((double)25000000)
-#define UCS_XT1_TIMEOUT 						50000
-#define UCS_XT2_TIMEOUT 						50000
-#define UCS_XT1_CRYSTAL_FREQUENCY    			32768
-#define UCS_XT2_CRYSTAL_FREQUENCY   			CPU_F
-
 /** The SPI frequency of this kit (8MHz) */
-#define COG_SPI_baudrate    					8000000
-#define FLASH_SPI_baudrate    					12000000
-#define _delay_us(A)\
-  __delay_cycles( (uint32_t) ( (double)(CPU_F) *((A)/1000000.0) + 0.5))
-
-#define _delay_ms(A)\
-  __delay_cycles( (uint32_t) ( (double)(CPU_F)*((A)/1000.0) + 0.5))
-
-#define _delay_s(A)\
-  __delay_cycles( (uint32_t) ( (double)(CPU_F)*((A)/1.0) + 0.5))
-
+#define COG_SPI_baudrate    					NRF_DRV_SPI_FREQ_8M
 
 
 //========================================================================================================

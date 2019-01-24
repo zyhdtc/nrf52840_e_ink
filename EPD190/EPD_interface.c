@@ -17,13 +17,13 @@
 *
 * \asf_license_stop
 **/
-#include "EPD_Temperature_IIC.h"
+//#include "EPD_Temperature_IIC.h"
 #include "EPD_drivers.h"
 #include "COG_Drivers_List.h"
 //#include "Board_HW_Driver.h"
 static volatile EPD_SIZE_t use_epd_size;
 static Driver_Handle_t *EPD_Driver_Handle;
-static int8_t temperature;
+static int8_t temperature = 40;
 static bool PWD_State;
 static OperationMode_t Cur_Mode;
 void EPD_display_init(void)
@@ -57,11 +57,11 @@ int8_t Set_AssignEPD_Drive(Driver_Type_t EPD_Driver,EPD_SIZE_t EPD_size,int8_t S
     	{
     		if(EPD_Driver_Handle->Support_Size[j]==EPD_size)
     		{
-    			if(Seltemperature<=(-100))
-    			{
-    				temperature=getTemperature();
-    			}
-    			else temperature=Seltemperature;
+//    			if(Seltemperature<=(-100))
+//    			{
+//    				temperature=getTemperature();
+//    			}
+//    			else temperature=Seltemperature;
 
     			flag=true;
     			use_epd_size=EPD_size;

@@ -144,6 +144,8 @@ static void eTC_G2Mb_temperature_factor(int8_t temperature) {
 		} else if (40 >= temperature && temperature > 20) {
 		stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][6];
 	} else stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][7];
+		
+	stage_time = eTC_G2Mb_TF_table[cur_EPD_type_index][5];
 }
 
 

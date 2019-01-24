@@ -21,7 +21,7 @@
 #define USE_Temperature_Sensor				-100
 int8_t Set_AssignEPD_Drive(Driver_Type_t EPD_Driver,EPD_SIZE_t EPD_size,int8_t Seltemperature);
 void EPD_display_init(void);
-uint8_t EPD_Power_off_Ex();
+uint8_t EPD_Power_off_Ex(void);
 uint8_t EPD_display_GU_from_pointer(uint8_t *First_Frame_ptr ,uint8_t *Secon_Frame_ptr,OperationMode_t operationmode,bool IsCtrlPWOff);
 uint8_t EPD_display_GU_from_flash(long First_Frame_address,long Secon_Frame_address,EPD_read_memory_handler On_EPD_read_flash,OperationMode_t operationmode,bool IsCtrlPWOff);
 uint8_t EPD_display_PU_from_pointer(uint8_t *First_Frame_ptr ,	uint8_t *Secon_Frame_ptr,bool IsCtrlPWOff,uint16_t PU_Time);

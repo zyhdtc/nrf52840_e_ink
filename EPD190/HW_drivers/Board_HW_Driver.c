@@ -33,12 +33,6 @@ void timer_epd_event_handler(nrf_timer_event_t event_type, void* p_context)
 }
 
 
-
-uint32_t getnowtime(void)
-{
-	return 0;
-}
-
 void Systick_Configuration(void)
 {
 		uint32_t time_ms = 1; // time in ms to be compared with
@@ -54,19 +48,6 @@ void Systick_Configuration(void)
     nrf_drv_timer_extended_compare(&TIMER_EPD, NRF_TIMER_CC_CHANNEL0, time_ticks, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, true);
 }
 
-void systick_Stop(void)
-{
-
-}
-/**
- * \brief Start Timer
- * \note
- * actual value:32 =~1ms, 327= ~10mSec,163=~5msec
- */
-void systick_Start(void)
-{
-
-}
 /**
  * \brief Start Timer
  * \note
@@ -75,8 +56,6 @@ void systick_Start(void)
  */
 void start_EPD_timer(void)
 {
-
-	//Start timer
 	nrf_drv_timer_enable(&TIMER_EPD);
 	EPD_Counter=0;
 }
@@ -102,7 +81,7 @@ uint32_t get_EPD_time_tick(void)
  * \brief Delay mini-seconds
  * \param ms The number of mini-seconds
  */
-void EPD_delay_ms(unsigned int ms)
+ void EPD_delay_ms(unsigned int ms)
 {
 	start_EPD_timer();
 	while(get_EPD_time_tick()<=ms)
@@ -120,36 +99,7 @@ void delay_btwn_CS_H_L(void)
 void system_init(void)
 {
 
-//	//Stop WDT
-//	WDT_A_hold(WDT_A_BASE);
-//	PMM_setVCoreUp(PMM_CORE_LEVEL_1);
-//	PMM_setVCoreUp(PMM_CORE_LEVEL_2);
-//	PMM_setVCoreUp(PMM_CORE_LEVEL_3);
 
-//	UCS_initClockSignal(
-//	    UCS_FLLREF,
-//	    UCS_REFOCLK_SELECT,
-//	    UCS_CLOCK_DIVIDER_1
-//	);
-//	UCS_initClockSignal(
-//	    UCS_ACLK,
-//	    UCS_REFOCLK_SELECT,
-//	    UCS_CLOCK_DIVIDER_1
-//	);
-
-//	UCS_initFLLSettle(
-//	    25000,
-//	    762
-//	);
-
-//	__bis_SR_register( GIE);
-//	//Verify if the Clock settings are as expected
-
-//	/*
-//		clockValue = UCS_getMCLK();//24969216
-//		clockValue = UCS_getACLK();//32768
-//		clockValue = UCS_getSMCLK();//24969216
-//	*/
 }
 /**
  * \brief PWM toggling.
@@ -183,10 +133,12 @@ void PWM_run(uint16_t ms)
 bool spi_state=false;
 #define SPI_INSTANCE  0 /**< SPI instance index. */
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
+//nrf_drv_spi_t const * const p_instance = &spi;
+
 /**
  * \brief Configure SPI
  */
-void epd_spi_init(uint32_t spi_baudrate)
+void epd_spi_init(nrf_drv_spi_frequency_t spi_baudrate)
 {
 //	USCI_B_SPI_disable(USCI_B0_BASE);
 //	//config  i/o
@@ -210,13 +162,14 @@ void epd_spi_init(uint32_t spi_baudrate)
 //	//Enable SPI module
 //	if(spi_state)USCI_B_SPI_enable(USCI_B0_BASE);
 
-		nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
-    spi_config.ss_pin   = SPI_SS_PIN;
-    spi_config.miso_pin = SPI_MISO_PIN;
-    spi_config.mosi_pin = SPI_MOSI_PIN;
-    spi_config.sck_pin  = SPI_SCK_PIN;
-    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
 
+		nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
+    spi_config.ss_pin    = SPI_SS_PIN;
+    spi_config.miso_pin  = SPI_MISO_PIN;
+    spi_config.mosi_pin  = SPI_MOSI_PIN;
+    spi_config.sck_pin   = SPI_SCK_PIN;
+		spi_config.frequency = spi_baudrate;
+    APP_ERROR_CHECK(nrf_drv_spi_init(&spi, &spi_config, NULL, NULL));
 
 }
 /**
@@ -233,11 +186,15 @@ void EPD_spi_attach()
  */
 void EPD_spi_detach(void)
 {
-	USCI_B_SPI_disable(USCI_B0_BASE);
-	GPIO_setAsOutputPin(
-	    GPIO_PORT_P3,
-	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
-	);
+//	USCI_B_SPI_disable(USCI_B0_BASE);
+//	GPIO_setAsOutputPin(
+//	    GPIO_PORT_P3,
+//	    GPIO_PIN0 + GPIO_PIN1 + GPIO_PIN2
+//	);
+	nrf_drv_spi_uninit(&spi);
+	config_gpio_dir_o(SPICLK_PORT,SPICLK_PIN);
+	config_gpio_dir_o(SPIMISO_PORT,SPIMISO_PIN);
+	config_gpio_dir_o(SPIMOSI_PORT,SPIMOSI_PIN);
 	SPIMISO_low();
 	SPIMOSI_low();
 	SPICLK_low();
@@ -253,10 +210,17 @@ bool check_flash_spi(void)
  */
 uint8_t EPD_spi_read(unsigned char data)
 {
-	while(USCI_B_SPI_isBusy(USCI_B0_BASE));
-	USCI_B_SPI_transmitData(USCI_B0_BASE, data);
-	while(USCI_B_SPI_isBusy(USCI_B0_BASE));
-	return USCI_B_SPI_receiveData(USCI_B0_BASE);
+	
+	//NRF_SPI0 = ((NRF_SPI_Type*)  NRF_SPI0_BASE)
+	nrf_spi_txd_set(NRF_SPI0, data);
+	//wait utill spi finish transfer
+	//hard-coded the delay time
+	//while(!NRF_SPI0->EVENTS_READY);
+	nrf_delay_us(10);
+	volatile uint8_t rx_data = nrf_spi_rxd_get(NRF_SPI0);
+	nrf_delay_us(10);
+	//while(!NRF_SPI0->EVENTS_READY);
+	return rx_data;
 }
 
 /**
@@ -288,10 +252,10 @@ void iTC_spi_send(uint8_t register_index,uint8_t *register_data,uint8_t len)
 #endif
 	EPD_cs_low();
 	EPD_DC_low();
-	_delay_us(20);
+	nrf_delay_us(20);
 	EPD_spi_write(register_index);
 	EPD_DC_high();
-	_delay_us(20);
+	nrf_delay_us(20);
 	while(len--)
 	{
 		EPD_spi_write(*register_data++);
