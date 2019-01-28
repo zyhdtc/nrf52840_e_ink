@@ -16,4 +16,7 @@ Follow these steps to build the project
   \EPD190\HW_drivers
   ..\..\..\..\..\..\integration\nrfx\legacy
   ..\..\..\..\..\..\modules\nrfx\drivers\include
-  7. Connect wires between nRFDK and EXT2 board acoording to 
+7. Connect wires between nRFDK and EXT2 board acoording the pin defination in "Board_HW_Driver.h".
+8. Build and program the firmware.
+
+What did I do
