@@ -11,9 +11,9 @@ Follow these steps to build the project
     \modules\nrfx\drivers\src\nrfx_timer.c
     \modules\nrfx\drivers\src\nrfx_spi.c
     \integration\nrfx\legacy\nrf_drv_spi.c
-
-6  . In project option, add following C/C++ include path:   
+6. In project option, add following C/C++ include path:   
   \EPD190
   \EPD190\HW_drivers
   ..\..\..\..\..\..\integration\nrfx\legacy
   ..\..\..\..\..\..\modules\nrfx\drivers\include
+  7. Connect wires between nRFDK and EXT2 board acoording to 
