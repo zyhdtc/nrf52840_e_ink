@@ -10,14 +10,15 @@ Follow these steps to build the project
 5. Add these nrf drivers to project
     \modules\nrfx\drivers\src\nrfx_timer.c
     \modules\nrfx\drivers\src\nrfx_spi.c
-    \integration\nrfx\legacy\nrf_drv_spi.c
-6. In project option, add following C/C++ include path:   
+    \integration\nrfx\legacy\nrf_drv_spi.c.
+6. In C:\Users\yz\Desktop\nrf52840DK\nRF5_SDK_15.2.0_9412b96\modules\nrfx\mdk\nrf52840_peripherals.h, delete or comment line 170:            #define SPIM_PRESENT
+7. In project option, add following C/C++ include path:   
   \EPD190
   \EPD190\HW_drivers
   ..\..\..\..\..\..\integration\nrfx\legacy
   ..\..\..\..\..\..\modules\nrfx\drivers\include
-7. Connect wires between nRFDK and EXT2 board acoording the pin defination in "Board_HW_Driver.h".
-8. Build and program the firmware.
+8. Connect wires between nRFDK and EXT2 board acoording the pin defination in "Board_HW_Driver.h".
+9. Build and program the firmware.
 
 # nRF5 SDK documentation
 http://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.sdk5.v15.2.0%2Findex.html&cp=4_0_0
